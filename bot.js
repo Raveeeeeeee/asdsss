@@ -1263,7 +1263,6 @@ function normalizeForDetection(text) {
   }
   
   normalized = applyKeyboardProximity(normalized);
-  normalized = expandAbbreviations(normalized);
   normalized = applyPhoneticReplacements(normalized);
   
   return normalized;
@@ -1283,6 +1282,8 @@ function applyKeyboardProximity(text) {
 
 function applyPhoneticReplacements(text) {
   return text
+    .replace(/([aeiou])w/g, '$1')
+    .replace(/([aeiou])h/g, '$1')
     .replace(/ph/g, 'f')
     .replace(/ck/g, 'k')
     .replace(/ks/g, 'x')
@@ -1308,23 +1309,6 @@ function applyPhoneticReplacements(text) {
     .replace(/q/g, 'k');
 }
 
-function expandAbbreviations(text) {
-  const words = text.split(/\s+/);
-  const expanded = words.map(word => {
-    switch(word) {
-      case 'tt': return 'tite';
-      case 'pp': return 'pepe';
-      case 'tn': return 'tanginamo';
-      case 'tg': return 'tangina';
-      case 'gg': return 'gago';
-      case 'pt': return 'puta';
-      case 'bs': return 'bobo';
-      case 'ts': return 'tarantado';
-      default: return word;
-    }
-  });
-  return expanded.join(' ');
-}
 
 function createFlexiblePattern(normalizedKeyword) {
   const chars = normalizedKeyword.split('');
@@ -2890,12 +2874,12 @@ async function handleGroupEvent(event) {
 
     await updateGroupMembers(threadID, threadInfo);
     
-    const isAdderTrusted = isDeveloper(adderID) || isSuperAdmin(threadID, adderID) || isAdmin(threadID, adderID);
+    const isAdderTrusted = adderID === botUserId || isDeveloper(adderID) || isSuperAdmin(threadID, adderID);
     
     if (isAdderTrusted) {
-      console.log(`✅ Trusted user (${adderID}) added ${addedUserIDs.length} member(s) to the group`);
+      console.log(`✅ Trusted user (${adderID}) added ${addedUserIDs.length} member(s) to the group - bypassing pending queue`);
     } else {
-      console.log(`⚠️ Regular user (${adderID}) added ${addedUserIDs.length} member(s) - adding to pending approval queue`);
+      console.log(`⚠️ User (${adderID}) added ${addedUserIDs.length} member(s) - adding to pending approval queue`);
     }
 
     for (const userID of addedUserIDs) {
